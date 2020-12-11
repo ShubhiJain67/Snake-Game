@@ -31,9 +31,9 @@ down.src = "media/audios/down.mp3";
 
 const box=32;
 let snake=[
-    {x:11*box,y:8*box},
-    {x:10*box,y:8*box},
-    {x:9*box,y:8*box}
+    {x:7*box,y:8*box},
+    {x:6*box,y:8*box},
+    {x:5*box,y:8*box}
 ];
 let food ={
     x:Math.floor(Math.random()*17+1)*box,
@@ -42,6 +42,8 @@ let food ={
 let score=0;
 let lives=3;
 let dir="r";
+let canRestartGame=false;
+let speed=400;
 
 
 /*-----------------------------------------------------------------------------------------*/
@@ -56,9 +58,8 @@ function playingMode(){
     getfood();
     getSnake();
     updateSnake();
-    detectCollision();
 }
-let playGame = setInterval(playingMode,400);
+let playGame = setInterval(playingMode,speed);
 
 
 /*-----------------------------------------------------------------------------------------*/
@@ -71,19 +72,25 @@ document.addEventListener("keydown",setDirection);
 function setDirection(event){
     let key = event.keyCode;
     if(key==37 && dir!="r"){
+        left.play();
         dir="l"
     }
     else if(key==38 && dir!="d"){
+        up.play();
         dir="u"
     }
     else if(key==39 && dir!="l"){
+        right.play();
         dir="r"
     }
     else if(key==40 && dir!="u"){
+        down.play();
         dir="d"
     }
+    else if(key==13 & canRestartGame){
+        location.reload();
+    }
     updateSnake();
-    console.log(dir);
 }
 
 
@@ -109,19 +116,23 @@ function updateSnake(){
     else if(dir=="d"){
         currY+=box;
     }
-    detectCollision(currX,currY);
-    snake.unshift({x:currX,y:currY});
-    if(!eatenApple()){
-        snake.pop();
-    }
+    if(detectCollision(currX,currY)){
+
+    }else{
+        snake.unshift({x:currX,y:currY});
+        if(!eatenApple()){
+            snake.pop();
+        }
+    }    
 }
 
 /*-------------------------------- To see if apple is eaten -----------------------------------*/
 
 function eatenApple(){
-    console.log(snake[0].x+" "+food.x+" "+snake[0].y+" "+food.y);
     if(snake[0].x==food.x && snake[0].y==food.y){
+        eat.play();
         score++;
+        speed-=50;
         food ={
             x:Math.floor(Math.random()*17+1)*box,
             y:Math.floor(Math.random()*15+3)*box
@@ -139,18 +150,24 @@ function eatenApple(){
 
 function detectCollision(currX,currY){
     if(selfCollision(currX,currY) || wallCollision(currX,currY)){
+        dead.play();
         lives--;
-        // if(lives<0){
-        //     clearInterval(playGame);
-        // }else{
-        //     snake=[
-        //         {x:11*box,y:8*box}
-        //     ];
-        //     dir="r";
-        // }
-        displayGameOver();
-        clearInterval(playGame);
+        if(lives<=0){
+            clearInterval(playGame);
+            displayGameOver();
+        }else{
+            snake=[
+                {x:7*box,y:8*box},
+                {x:6*box,y:8*box},
+                {x:5*box,y:8*box}
+            ];
+            dir="r";
+            currX=snake[0].x;
+            currY=snake[0].y;
+        }
+        return true;
     }
+    return false;
 }
 
 /*-------------------------------- Collision with Self -----------------------------------*/
@@ -182,13 +199,13 @@ function wallCollision(currX,currY){
 /*---------------------------------- Message on game over -----------------------------------*/
 
 function displayGameOver(){
+    displayLives();
     context.fillStyle="red";
-    context.fillRect(4.5*box,8*box,10*box,7*box);
+    context.fillRect(4.5*box,8*box,10*box,5*box);
     context.strokeStyle = "black";
-    context.strokeRect(4.5*box,8*box,10*box,7*box);
+    context.strokeRect(4.5*box,8*box,10*box,5*box);
     displayText("Game over!!",5.5*box,10*box,50);
     displayText("Score : "+score,6.5*box,12*box,50);
-    displayText("Press Enter to start again",6.5*box,14*box,20);
 }
 
 /*-------------------------------- Displaying playground ---------------------------------*/
